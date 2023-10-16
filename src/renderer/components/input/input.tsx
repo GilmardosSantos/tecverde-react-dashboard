@@ -6,13 +6,14 @@ import { styled } from '@mui/material/styles';
 interface RcInputProps<T, Y> {
   name: string;
   label: string;
-  model: string;
+  model: string | string[];
   setModel: React.Dispatch<React.SetStateAction<T>>;
   className?: string;
   variant?: TextFieldVariants;
+  multiline?: boolean;
 }
 
-const TestInput = styled(TextField)<TextFieldProps>(({ theme }) => ({
+export const StyledInput = styled(TextField)<TextFieldProps>(({ theme }) => ({
   color: theme.palette.success.main,
   '.css-aqpgxn-MuiFormLabel-root-MuiInputLabel-root': {
     color: 'rgb(79,70,229)',
@@ -23,11 +24,14 @@ const TestInput = styled(TextField)<TextFieldProps>(({ theme }) => ({
   '.css-1x51dt5-MuiInputBase-input-MuiInput-input': {
     color: 'rgb(79,70,229)',
   },
+  '.css-v4u5dn-MuiInputBase-root-MuiInput-root:hover': {
+    borderColor: 'red',
+  },
   '.css-v4u5dn-MuiInputBase-root-MuiInput-root:before': {
-    'border-color': 'rgb(79,70,229)',
+    borderColor: 'rgb(79,70,229)',
   },
   '.css-v4u5dn-MuiInputBase-root-MuiInput-root:after': {
-    'border-color': 'rgb(79,70,229)',
+    borderColor: 'rgb(79,70,229)',
   },
 }));
 
@@ -38,6 +42,7 @@ function RcInput<T, Y>({
   setModel,
   variant = 'standard',
   className = '',
+  multiline = false,
 }: RcInputProps<T, Y>) {
   const changeValue = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
@@ -47,13 +52,14 @@ function RcInput<T, Y>({
   };
 
   return (
-    <TestInput
+    <StyledInput
       name={name}
       className={className}
       variant={variant}
       label={label}
       value={model}
       onChange={changeValue}
+      multiline={multiline}
     />
   );
 }

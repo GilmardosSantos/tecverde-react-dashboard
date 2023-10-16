@@ -1,4 +1,5 @@
 import Endereco from './endereco';
+import Equipamento from './equipamento';
 
 class Termo {
   constructor(
@@ -10,7 +11,7 @@ class Termo {
     public cargo = '',
     public data = '',
     public endereco = new Endereco(),
-    public equipamentos = '',
+    public equipamentos = [new Equipamento()],
     public estadoEquipamento = '',
     public acao = [],
   ) {

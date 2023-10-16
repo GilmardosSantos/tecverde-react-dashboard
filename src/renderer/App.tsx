@@ -2,6 +2,7 @@
 import icon from '../../assets/icon.svg';
 import './App.css';
 import AppRouter from './routes/routes';
+import { FetchProvider } from './services/useFetch';
 
 function Hello() {
   return (
@@ -48,7 +49,9 @@ export default function App() {
       </header>
       <section>
         <div id="app-card" className="w-full mt-8 p-2 rounded-md">
-          <AppRouter />
+          <FetchProvider>
+            <AppRouter />
+          </FetchProvider>
         </div>
       </section>
     </main>
