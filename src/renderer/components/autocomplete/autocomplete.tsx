@@ -2,6 +2,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import {
   Autocomplete,
+  AutocompleteInputChangeReason,
   AutocompleteProps,
   TextField,
   TextFieldProps,
@@ -9,7 +10,7 @@ import {
 } from '@mui/material';
 
 import { styled } from '@mui/material/styles';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Options from '../../models/options';
 
 interface RcAutoCompleteProps<T, Y> {
@@ -58,22 +59,51 @@ function RcAutoComplete<T, Y>({
   multiline = false,
 }: RcAutoCompleteProps<T, Y>) {
   const [autocompleteValue, setAutocompleteValue] = useState('');
-  const changeValue = (event: React.ChangeEvent<any>, newValue: any) => {
-    if (newValue) {
-      const { value } = newValue;
-      setModel((prevModel) => ({ ...prevModel, [name]: value }));
-      setAutocompleteValue(newValue.label);
-      if (newValue !== '' && onChange) {
-        console.log(newValue);
-        onChange(newValue);
+  const changeValue = useMemo(
+    () => (event: any, newValue: any) => {
+      if (newValue) {
+        const { value } = newValue;
+        setModel((prevModel) => ({ ...prevModel, [name]: 'vasco' }));
+        console.log('[newValue]', newValue);
+        setAutocompleteValue('vasco');
+        if (newValue !== '' && onChange) {
+          console.log(newValue);
+          onChange(newValue);
+        }
       }
-    }
-  };
+    },
+    [name, onChange, setModel],
+  );
+
+  const inputChange = useMemo(
+    () =>
+      (
+        event: React.SyntheticEvent<any, any>,
+        value: string,
+        reason: AutocompleteInputChangeReason,
+      ) => {
+        setAutocompleteValue(value);
+        const finalValue = options.find(
+          (option) => option.label === value,
+        ) as Options<any>;
+        console.log(finalValue);
+        setModel((prevModel) => ({ ...prevModel, [name]: finalValue.value }));
+        if (onChange) onChange(finalValue);
+      },
+    [name, options, setModel, onChange],
+  );
+
+  // useEffect(() => {
+  //   if (model && typeof model === 'string') setAutocompleteValue(model);
+  // }, [model, changeValue]);
 
   const isOptionEqual = (option: any, value: any) => {
-    // console.log(option, value);
+    console.log(value);
     if (value === '') return true;
-    return option.label === value;
+    if (option.label) {
+      return option.label === value;
+    }
+    return option === value;
   };
 
   const StyledAutoComplete = styled(Autocomplete)<any>(({ theme }) => ({
@@ -100,11 +130,12 @@ function RcAutoComplete<T, Y>({
   }));
 
   return (
-    <StyledAutoComplete
+    <Autocomplete
       options={options}
       noOptionsText={options.length > 0 ? 'Opção não encontrada' : 'Sem opções'}
+      // onChange={changeValue}
+      onInputChange={inputChange}
       isOptionEqualToValue={isOptionEqual}
-      onChange={changeValue}
       value={autocompleteValue}
       clearIcon=""
       renderInput={(params: any) => (
@@ -112,7 +143,7 @@ function RcAutoComplete<T, Y>({
           {...params}
           name={name}
           label={label}
-          value={model}
+          value={autocompleteValue}
           className={`${className}`}
           variant={variant}
         />

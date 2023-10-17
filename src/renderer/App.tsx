@@ -43,16 +43,17 @@ function Hello() {
 
 export default function App() {
   return (
-    <main>
+    <main className=" w-full ">
       <header>
         <p>navworks</p>
       </header>
-      <section>
-        <div id="app-card" className="w-full mt-8 p-2 rounded-md">
-          <FetchProvider>
-            <AppRouter />
-          </FetchProvider>
-        </div>
+      <section
+        id="app-section"
+        className="overflow-hidden h-[650px] rounded-md"
+      >
+        <FetchProvider>
+          <AppRouter />
+        </FetchProvider>
       </section>
     </main>
     // <Router>

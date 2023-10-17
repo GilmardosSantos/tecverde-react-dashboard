@@ -1,7 +1,9 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable react/jsx-no-bind */
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@mui/material';
 import TextField from '@mui/material/TextField';
+import { generate } from 'rxjs';
 import { useFetch } from '../../services/useFetch';
 import RcInput from '../../components/input/input';
 import Termo from '../../models/termo';
@@ -9,12 +11,14 @@ import Equipamento from '../../models/equipamento';
 import RcSelect from '../../components/select/select';
 import RcAutoComplete from '../../components/autocomplete/autocomplete';
 import Options from '../../models/options';
-import { GlpiProvider, useGlpi } from '../../services/glpi.context';
+import { useGlpi, GlpiProvider } from '../../services/glpi.context';
+import { ComputerResponse } from '../../models/glpi';
+import { User } from '../../models/glpi/user';
 
 function UnwrappedComponent() {
   const [termo, setTermo] = useState(new Termo());
   const [equipamento, setEquipamento] = useState(new Equipamento());
-
+  const { request, users, groups } = useGlpi();
   function adicionarEquipamento(tipoAcao: string): void {
     console.log(equipamento);
     if (tipoAcao === 'retirada') {
@@ -33,20 +37,29 @@ function UnwrappedComponent() {
     new Options('Line', 'Linhas'),
   ];
 
+  const [patrimonioOptions, setPatrimonioOptions] = useState<Options<any>[]>(
+    [],
+  );
+
   async function getEquipamentoOptions(tipoEquipamento: Options<any>) {
     const { filter, value } = tipoEquipamento;
-    const URL_API = 'https://api.publicapis.org/entries';
     switch (value) {
       case 'Computer':
-        fetch(URL_API)
-          .then(async (response) => {
-            if (!response.ok) throw new Error('Response error');
-            const data = await response.json();
-            console.log(data);
-            return data;
+        request()
+          .get(value)
+          .then((response: ComputerResponse) => {
+            const { data } = response;
+            const opcoes = data.map((computer) => {
+              const u = users?.find((user) => user.id === computer.users_id);
+              const valueOption = computer.name;
+              const labelOption = generateLabel(computer, u);
+              return new Options(valueOption, labelOption, '', computer);
+            });
+            setPatrimonioOptions(opcoes);
+            return null;
           })
-          .catch((err) => {
-            console.error(err);
+          .catch((error) => {
+            console.log(error);
           });
         break;
       case 'Phone':
@@ -56,12 +69,29 @@ function UnwrappedComponent() {
       default:
         break;
     }
+
+    function generateLabel(object: any, u: User | undefined) {
+      return `${object.name} ${u?.firstname ? `- ${u.firstname}` : ''} ${
+        u?.realname ? u.realname : ''
+      }`;
+    }
     // switch(tipoEquipamento)
   }
+  const selectPatrimonio = useMemo(
+    () => async (patrimonio: Options<any>) => {
+      const { object } = patrimonio;
+      setEquipamento((prevVal) => ({ ...prevVal, serial: object.serial }));
+    },
+    [setEquipamento],
+  );
+
+  // async function selectPatrimonio(patrimonio: Options<any>) {
+  //   console.log(equipamento);
+  // }
 
   return (
-    <div className="term-container rounded-md  flex gap-2 selection:bg-indigo-500 selection:text-indigo-800">
-      <section className="wrapper rounded p-2 bg-indigo-950 flex flex-col flex-wrap gap-2 basis-1/2">
+    <div className="term-container rounded-md h-[99%] w-full overflow-y-scroll flex-wrap flex gap-2 selection:bg-indigo-500 selection:text-indigo-800">
+      <section className=" wrapper rounded p-2 bg-indigo-950 flex flex-col flex-wrap gap-2 basis-1/2">
         <span className="title-wrapper flex justify-center">
           <h1 className="text-2xl font-sans font-semibold text-indigo-600">
             Gerador de Termos
@@ -185,6 +215,8 @@ function UnwrappedComponent() {
               label="Patrimonio"
               model={equipamento.patrimonio}
               setModel={setEquipamento}
+              onChange={selectPatrimonio}
+              options={patrimonioOptions}
             />
           </div>
           <div className="item basis-[256px]">
@@ -205,7 +237,7 @@ function UnwrappedComponent() {
           </div>
           <div className="item basis-[256px]">
             <RcAutoComplete
-              name="Serial"
+              name="serial"
               label="Serial"
               model={equipamento.serial}
               setModel={setEquipamento}
